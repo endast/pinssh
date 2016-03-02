@@ -26,7 +26,7 @@ do
     ping -t 1 -c 1 "$ADDRESS" > /dev/null
     PING_STATUS="$?"
     if [ "$PING_STATUS" -eq "0" ]; then
-        echo "SSH TO $SSH_CONN"
+        echo "SSHing to $SSH_CONN"
         break
     else
         echo "$ADDRESS not up"
