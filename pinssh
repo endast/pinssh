@@ -1,0 +1,37 @@
+#!/bin/bash
+
+ADDRESS="$1"
+WAIT_TIME="$2"
+SSH_CONN="$ADDRESS"
+
+# Set the default wait time
+# between pings to 1
+if [ -z "$WAIT_TIME" ]; then
+    WAIT_TIME="1"
+else
+    echo "Waiting $WAIT_TIME seconds between pings"
+fi
+
+# Check if a user is specified if so split
+# the string so we can ping the address
+if [ ! -z $(echo $ADDRESS |grep "@" ) ]; then
+    SSH_USER=$(echo $ADDRESS |cut -f 1 -d"@")
+    ADDRESS=$(echo $ADDRESS |cut -f 2 -d"@")
+    SSH_CONN="$SSH_USER@$ADDRESS"    
+fi
+
+# Forever ping the host until 
+while true
+do
+    ping -t 1 -c 1 "$ADDRESS" > /dev/null
+    PING_STATUS="$?"
+    if [ "$PING_STATUS" -eq "0" ]; then
+        echo "SSH TO $SSH_CONN"
+        break
+    else
+        echo "$ADDRESS not up"
+    fi
+    sleep $WAIT_TIME
+done
+
+ssh "$SSH_CONN"
