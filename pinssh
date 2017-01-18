@@ -3,6 +3,8 @@
 ADDRESS="$1"
 WAIT_TIME="$2"
 SSH_CONN="$ADDRESS"
+MAX_RETRIES="$3"
+
 # If no address i specified
 # print help and exit
 if [ -z "$ADDRESS" ]; then
@@ -22,6 +24,16 @@ else
     echo "Waiting $WAIT_TIME seconds between pings"
 fi
 
+# Set the default max retries
+# between ssh attempts to 10
+if [ -z "$MAX_RETRIES" ]; then
+    MAX_RETRIES="100"
+else
+    echo "Max $MAX_RETRIES SSH attempts"
+fi
+
+echo
+
 # Check if a user is specified if so split
 # the string so we can ping the address
 if [ ! -z $(echo $ADDRESS |grep "@" ) ]; then
@@ -30,13 +42,15 @@ if [ ! -z $(echo $ADDRESS |grep "@" ) ]; then
     SSH_CONN="$SSH_USER@$ADDRESS"    
 fi
 
-# Forever ping the host until 
+# Forever ping the host until it is up
 while true
 do
     ping -t 1 -c 1 "$ADDRESS" > /dev/null
     PING_STATUS="$?"
     if [ "$PING_STATUS" -eq "0" ]; then
         echo "SSHing to $SSH_CONN"
+        echo
+        sleep 1
         break
     else
         echo "$ADDRESS not up"
@@ -44,4 +58,22 @@ do
     sleep $WAIT_TIME
 done
 
-ssh "$SSH_CONN"
+
+# Try to ssh to the host
+for i in $(seq 1 $MAX_RETRIES);
+do
+    ssh "$SSH_CONN"
+    SSH_STATUS="$?"
+    if [ "$SSH_STATUS" -ne "255" ]; then
+        exit 0
+    else
+        echo "Problem SSHing to $SSH_CONN, retrying..."
+        echo
+    fi
+
+    sleep $WAIT_TIME
+done
+
+echo "Max retries reached, exiting..."
+exit 1
+
