@@ -3,6 +3,16 @@
 ADDRESS="$1"
 WAIT_TIME="$2"
 SSH_CONN="$ADDRESS"
+# If no address i specified
+# print help and exit
+if [ -z "$ADDRESS" ]; then
+    echo
+    echo "No address specified"
+    echo "Usage:"
+    echo "pinssh <address> <wait_time i seconds default=1> <max_retries default=100>"
+    echo
+    exit 1
+fi
 
 # Set the default wait time
 # between pings to 1
